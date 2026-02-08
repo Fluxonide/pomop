@@ -50,6 +50,7 @@ class PomopApp {
         this.phaseLabel = document.getElementById('phaseLabel');
         this.cycleIndicator = document.getElementById('cycleIndicator');
         this.timerProgress = document.getElementById('timerProgress');
+        this.timerGlow = document.querySelector('.timer-glow-pulse');
 
         // Control buttons
         this.startBtn = document.getElementById('startBtn');
@@ -293,6 +294,34 @@ class PomopApp {
         const offset = circumference - (data.progress / 100) * circumference;
         this.timerProgress.style.strokeDashoffset = offset;
 
+        // Update glow fill based on progress
+        // Focus: depletes (shrinks) as time runs out
+        // Breaks: fills up (grows) as you rest
+        if (this.timerGlow) {
+            const minScale = 0.5;
+            const maxScale = 1.2;
+            const minOpacity = 0.15;
+            const maxOpacity = 0.45;
+
+            // Determine if this is a break phase
+            const isBreak = data.phase === 'shortBreak' || data.phase === 'longBreak';
+
+            let scale, opacity;
+            if (isBreak) {
+                // During breaks: fill UP as timer counts down (progress increases)
+                scale = minScale + (data.progress / 100) * (maxScale - minScale);
+                opacity = minOpacity + (data.progress / 100) * (maxOpacity - minOpacity);
+            } else {
+                // During focus: fill DOWN as timer counts down (inverse of progress)
+                const inverseProgress = 100 - data.progress;
+                scale = minScale + (inverseProgress / 100) * (maxScale - minScale);
+                opacity = minOpacity + (inverseProgress / 100) * (maxOpacity - minOpacity);
+            }
+
+            this.timerGlow.style.transform = `scale(${scale})`;
+            this.timerGlow.style.opacity = opacity;
+        }
+
         // Update document title
         document.title = `${formatted} - Pomop`;
     }
@@ -305,6 +334,9 @@ class PomopApp {
         };
 
         this.phaseLabel.textContent = phaseLabels[data.phase] || 'Focus Time';
+
+        // Update data attribute for CSS styling
+        document.documentElement.setAttribute('data-phase', data.phase);
 
         // Update progress color based on phase
         const colors = {
@@ -516,6 +548,12 @@ class PomopApp {
 // Initialize App on Load
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
+const initApp = () => {
     window.pomopApp = new PomopApp();
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}

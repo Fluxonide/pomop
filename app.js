@@ -290,37 +290,17 @@ class PomopApp {
         this.timerDisplay.textContent = formatted;
 
         // Update circular progress
-        const circumference = 879.6; // 2 * π * 140
-        const offset = circumference - (data.progress / 100) * circumference;
+        const circumference = 2 * Math.PI * 140; // Compute from radius to avoid drift
+        // Clamp progress to [0, 100] and snap near-100% values so the ring fully closes
+        let progress = typeof data.progress === 'number' ? data.progress : 0;
+        progress = Math.max(0, Math.min(100, progress));
+        if (progress > 99.5) progress = 100;
+
+        // Visually, we want a FULL ring at the start that shrinks as time runs out.
+        // data.progress is "elapsed" percentage, so invert it for display.
+        const displayProgress = 100 - progress;
+        const offset = circumference - (displayProgress / 100) * circumference;
         this.timerProgress.style.strokeDashoffset = offset;
-
-        // Update glow fill based on progress
-        // Focus: depletes (shrinks) as time runs out
-        // Breaks: fills up (grows) as you rest
-        if (this.timerGlow) {
-            const minScale = 0.5;
-            const maxScale = 1.2;
-            const minOpacity = 0.15;
-            const maxOpacity = 0.45;
-
-            // Determine if this is a break phase
-            const isBreak = data.phase === 'shortBreak' || data.phase === 'longBreak';
-
-            let scale, opacity;
-            if (isBreak) {
-                // During breaks: fill UP as timer counts down (progress increases)
-                scale = minScale + (data.progress / 100) * (maxScale - minScale);
-                opacity = minOpacity + (data.progress / 100) * (maxOpacity - minOpacity);
-            } else {
-                // During focus: fill DOWN as timer counts down (inverse of progress)
-                const inverseProgress = 100 - data.progress;
-                scale = minScale + (inverseProgress / 100) * (maxScale - minScale);
-                opacity = minOpacity + (inverseProgress / 100) * (maxOpacity - minOpacity);
-            }
-
-            this.timerGlow.style.transform = `scale(${scale})`;
-            this.timerGlow.style.opacity = opacity;
-        }
 
         // Update document title
         document.title = `${formatted} - Pomop`;
@@ -339,13 +319,8 @@ class PomopApp {
         document.documentElement.setAttribute('data-phase', data.phase);
 
         // Update progress color based on phase
-        const colors = {
-            focus: 'var(--timer-focus)',
-            shortBreak: 'var(--timer-break)',
-            longBreak: 'var(--timer-long-break)'
-        };
-
-        this.timerProgress.style.stroke = colors[data.phase] || colors.focus;
+        // Color is handled purely via CSS `[data-phase] .timer-circle-progress`
+        // so we don't need to set an inline stroke color here.
     }
 
     updateCycleIndicator(data) {

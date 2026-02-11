@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS = {
     shortBreakDuration: 5,    // minutes
     longBreakDuration: 15,    // minutes
     cycleLength: 4,           // pomodoros until long break
-    autoStart: false,         // auto-start next phase
+    autoStart: true,          // auto-start next phase (always on)
     volume: 70,               // 0-100
     soundStart: 'chime',      // sound for timer start
     soundEnd: 'bell',         // sound for timer end

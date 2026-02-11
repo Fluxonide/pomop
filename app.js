@@ -191,10 +191,7 @@ class PomopApp {
             });
         });
 
-        // Auto-start checkbox
-        document.getElementById('autoStart').addEventListener('change', (e) => {
-            this.settings.set('autoStart', e.target.checked);
-        });
+
 
         // Notifications checkbox
         document.getElementById('notifications').addEventListener('change', (e) => {
@@ -214,14 +211,7 @@ class PomopApp {
             });
         });
 
-        // Mode toggle
-        document.getElementById('lightModeBtn').addEventListener('click', () => {
-            this.setMode('light');
-        });
 
-        document.getElementById('darkModeBtn').addEventListener('click', () => {
-            this.setMode('dark');
-        });
 
         // Audio selection
         document.querySelectorAll('.audio-option').forEach(option => {
@@ -242,6 +232,122 @@ class PomopApp {
                 const soundName = e.target.dataset.preview;
                 this.audio.setVolume(this.settings.get('volume'));
                 this.audio.preview(soundName);
+            });
+        });
+
+        // Custom sound upload
+        const customSoundUpload = document.getElementById('customSoundUpload');
+        if (customSoundUpload) {
+            customSoundUpload.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Validate file type
+                const validTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3'];
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg)$/i)) {
+                    alert('Please upload a valid audio file (MP3, WAV, or OGG)');
+                    return;
+                }
+
+                // Validate file size (2MB limit)
+                const maxSize = 2 * 1024 * 1024; // 2MB
+                if (file.size > maxSize) {
+                    alert('File size must be less than 2MB');
+                    return;
+                }
+
+                try {
+                    // Generate a unique name from the filename
+                    const baseName = file.name.replace(/\.[^/.]+$/, '');
+                    const soundName = `custom_${baseName}_${Date.now()}`;
+
+                    await this.audio.addCustomSound(soundName, file);
+                    this.renderCustomSounds();
+
+                    // Clear the input
+                    e.target.value = '';
+                } catch (error) {
+                    console.error('Error uploading custom sound:', error);
+                    alert('Failed to upload sound. Please try again.');
+                }
+            });
+        }
+
+        // Render custom sounds on load
+        this.renderCustomSounds();
+    }
+
+    // Render custom sounds list
+    renderCustomSounds() {
+        const customSoundsList = document.getElementById('customSoundsList');
+        if (!customSoundsList) return;
+
+        const customSounds = this.audio.customSounds;
+        const soundKeys = Object.keys(customSounds);
+
+        if (soundKeys.length === 0) {
+            customSoundsList.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 1rem; font-size: 0.85rem;">No custom sounds uploaded</div>';
+            return;
+        }
+
+        const currentSound = this.settings.get('soundEnd');
+
+        customSoundsList.innerHTML = soundKeys.map(soundKey => {
+            // Extract display name from the sound key
+            const displayName = soundKey.replace(/^custom_/, '').replace(/_\d+$/, '');
+            const isActive = currentSound === soundKey ? 'active' : '';
+
+            return `
+                <div class="custom-sound-item ${isActive}" data-sound="${soundKey}">
+                    <span class="custom-sound-name">🎵 ${displayName}</span>
+                    <div class="custom-sound-actions">
+                        <button class="audio-preview" data-preview="${soundKey}">▶</button>
+                        <button class="custom-sound-delete" data-delete="${soundKey}">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add event listeners to custom sound items
+        customSoundsList.querySelectorAll('.custom-sound-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Don't trigger if clicking on buttons
+                if (e.target.closest('button')) return;
+
+                const soundName = item.dataset.sound;
+                document.querySelectorAll('.audio-option, .custom-sound-item').forEach(o => o.classList.remove('active'));
+                item.classList.add('active');
+                this.settings.set('soundEnd', soundName);
+            });
+        });
+
+        // Add event listeners to preview buttons
+        customSoundsList.querySelectorAll('.audio-preview').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const soundName = e.target.dataset.preview;
+                this.audio.setVolume(this.settings.get('volume'));
+                this.audio.preview(soundName);
+            });
+        });
+
+        // Add event listeners to delete buttons
+        customSoundsList.querySelectorAll('.custom-sound-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const soundName = e.target.dataset.delete;
+
+                if (confirm('Delete this custom sound?')) {
+                    this.audio.deleteCustomSound(soundName);
+
+                    // If this was the selected sound, reset to default
+                    if (this.settings.get('soundEnd') === soundName) {
+                        this.settings.set('soundEnd', 'bell');
+                        document.querySelector('.audio-option[data-sound="bell"]')?.classList.add('active');
+                    }
+
+                    this.renderCustomSounds();
+                }
             });
         });
     }

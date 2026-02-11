@@ -121,13 +121,7 @@
             <input type="range" id="cycleLength" class="setting-range" min="2" max="8" value="4">
           </div>
 
-          <!-- Auto-start -->
-          <div class="setting-group">
-            <label class="checkbox-wrapper">
-              <input type="checkbox" id="autoStart" class="checkbox">
-              <span>Auto-start next phase</span>
-            </label>
-          </div>
+
 
           <!-- Theme Settings -->
           <div class="setting-group">
@@ -141,14 +135,7 @@
             </div>
           </div>
 
-          <!-- Mode Toggle -->
-          <div class="setting-group">
-            <label class="setting-label">Mode</label>
-            <div class="mode-toggle">
-              <button id="lightModeBtn" class="btn btn-secondary active">☀️ Light</button>
-              <button id="darkModeBtn" class="btn btn-secondary">🌙 Dark</button>
-            </div>
-          </div>
+
 
           <!-- Audio Settings -->
           <div class="setting-group">
@@ -176,6 +163,20 @@
               <div class="audio-option" data-sound="ping">
                 <span>🔊 Ping</span>
                 <button class="audio-preview" data-preview="ping">▶</button>
+              </div>
+            </div>
+
+            <!-- Custom Sounds Section -->
+            <div class="custom-sounds-section">
+              <div class="custom-sounds-header">
+                <label class="setting-label">Custom Sounds</label>
+                <label for="customSoundUpload" class="btn btn-secondary btn-sm">
+                  📁 Upload Sound
+                </label>
+                <input type="file" id="customSoundUpload" accept=".mp3,.wav,.ogg,audio/*" style="display: none;">
+              </div>
+              <div id="customSoundsList" class="custom-sounds-list">
+                <!-- Custom sounds will be populated here -->
               </div>
             </div>
           </div>

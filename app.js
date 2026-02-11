@@ -49,6 +49,7 @@ class PomopApp {
         this.timerDisplay = document.getElementById('timerDisplay');
         this.phaseLabel = document.getElementById('phaseLabel');
         this.cycleIndicator = document.getElementById('cycleIndicator');
+        this.progressDots = document.getElementById('progressDots');
         this.timerProgress = document.getElementById('timerProgress');
         this.timerGlow = document.querySelector('.timer-glow-pulse');
 
@@ -176,6 +177,11 @@ class PomopApp {
                 if (['focusDuration', 'shortBreakDuration', 'longBreakDuration', 'cycleLength'].includes(key)) {
                     this.timer.init(this.settings.getAll());
                     this.updateUI();
+                    // Update progress dots when cycle length changes
+                    if (key === 'cycleLength') {
+                        const state = this.timer.getState();
+                        this.updateProgressDots((state.currentCycle || 0) + 1, value);
+                    }
                 }
 
                 // Update volume
@@ -326,6 +332,39 @@ class PomopApp {
     updateCycleIndicator(data) {
         const cycleLength = this.settings.get('cycleLength');
         this.cycleIndicator.textContent = `Pomodoro ${data.cycle} of ${cycleLength}`;
+        this.updateProgressDots(data.cycle, cycleLength);
+    }
+
+    updateProgressDots(currentCycle, totalCycles) {
+        // Check if element exists
+        if (!this.progressDots) {
+            console.error('Progress dots element not found!');
+            return;
+        }
+
+        console.log('Updating progress dots:', { currentCycle, totalCycles });
+
+        // Clear existing dots
+        this.progressDots.innerHTML = '';
+
+        // Create dots for each pomodoro in the cycle
+        for (let i = 1; i <= totalCycles; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'progress-dot';
+
+            if (i < currentCycle) {
+                // Completed pomodoros
+                dot.classList.add('completed');
+            } else if (i === currentCycle) {
+                // Current pomodoro
+                dot.classList.add('current');
+            }
+            // Upcoming pomodoros have no additional class
+
+            this.progressDots.appendChild(dot);
+        }
+
+        console.log('Progress dots created:', this.progressDots.children.length);
     }
 
     updateControlButtons() {

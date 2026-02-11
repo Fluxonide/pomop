@@ -33,7 +33,7 @@
 
     <!-- Header -->
     <header class="app-header">
-      <div class="app-logo">⏰ Pomop</div>
+      <div class="app-logo">Pomop</div>
       <div class="header-controls">
         <button id="settingsBtn" class="btn btn-icon" title="Settings" aria-label="Open settings">
           ⚙️
@@ -44,10 +44,14 @@
     <!-- Main Content -->
     <main class="main-content">
 
-      <!-- Timer Section -->
-      <section class="timer-section glass-card">
+      <!-- Timer Section (no card/container, full-viewport feel) -->
+      <section class="timer-section">
         <div class="cycle-indicator" id="cycleIndicator">
           Pomodoro 1 of 4
+        </div>
+
+        <div class="progress-dots" id="progressDots">
+          <!-- Progress dots will be populated by JavaScript -->
         </div>
 
         <div class="phase-label" id="phaseLabel">
@@ -80,109 +84,111 @@
         </div>
       </section>
 
-      <!-- Settings Panel -->
-      <section id="settingsPanel" class="settings-panel glass-card hidden">
-        <div class="settings-header">
-          <h2 class="settings-title">Settings</h2>
-          <button id="closeSettingsBtn" class="btn btn-secondary">Close</button>
-        </div>
-
-        <!-- Timer Duration Settings -->
-        <div class="setting-group">
-          <label class="setting-label">
-            Focus Duration: <span class="setting-value" id="focusValue">25</span> min
-          </label>
-          <input type="range" id="focusDuration" class="setting-range" min="1" max="60" value="25">
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label">
-            Short Break: <span class="setting-value" id="shortBreakValue">5</span> min
-          </label>
-          <input type="range" id="shortBreakDuration" class="setting-range" min="1" max="30" value="5">
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label">
-            Long Break: <span class="setting-value" id="longBreakValue">15</span> min
-          </label>
-          <input type="range" id="longBreakDuration" class="setting-range" min="5" max="60" value="15">
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label">
-            Pomodoros per Cycle: <span class="setting-value" id="cycleValue">4</span>
-          </label>
-          <input type="range" id="cycleLength" class="setting-range" min="2" max="8" value="4">
-        </div>
-
-        <!-- Auto-start -->
-        <div class="setting-group">
-          <label class="checkbox-wrapper">
-            <input type="checkbox" id="autoStart" class="checkbox">
-            <span>Auto-start next phase</span>
-          </label>
-        </div>
-
-        <!-- Theme Settings -->
-        <div class="setting-group">
-          <label class="setting-label">Theme</label>
-          <div class="theme-grid">
-            <button class="theme-option active" data-theme="ocean">Ocean</button>
-            <button class="theme-option" data-theme="forest">Forest</button>
-            <button class="theme-option" data-theme="sunset">Sunset</button>
-            <button class="theme-option" data-theme="lavender">Lavender</button>
-            <button class="theme-option" data-theme="minimal">Minimal</button>
+      <!-- Settings Overlay (sits on top of timer, no layout shift) -->
+      <div id="settingsPanel" class="settings-overlay hidden">
+        <section class="settings-panel glass-card">
+          <div class="settings-header">
+            <h2 class="settings-title">Settings</h2>
+            <button id="closeSettingsBtn" class="btn btn-secondary">Close</button>
           </div>
-        </div>
 
-        <!-- Mode Toggle -->
-        <div class="setting-group">
-          <label class="setting-label">Mode</label>
-          <div class="mode-toggle">
-            <button id="lightModeBtn" class="btn btn-secondary active">☀️ Light</button>
-            <button id="darkModeBtn" class="btn btn-secondary">🌙 Dark</button>
+          <!-- Timer Duration Settings -->
+          <div class="setting-group">
+            <label class="setting-label">
+              Focus Duration: <span class="setting-value" id="focusValue">25</span> min
+            </label>
+            <input type="range" id="focusDuration" class="setting-range" min="1" max="60" value="25">
           </div>
-        </div>
 
-        <!-- Audio Settings -->
-        <div class="setting-group">
-          <label class="setting-label">
-            Volume: <span class="setting-value" id="volumeValue">70</span>%
-          </label>
-          <input type="range" id="volume" class="setting-range" min="0" max="100" value="70">
-        </div>
+          <div class="setting-group">
+            <label class="setting-label">
+              Short Break: <span class="setting-value" id="shortBreakValue">5</span> min
+            </label>
+            <input type="range" id="shortBreakDuration" class="setting-range" min="1" max="30" value="5">
+          </div>
 
-        <div class="setting-group">
-          <label class="setting-label">Timer End Sound</label>
-          <div class="audio-options">
-            <div class="audio-option active" data-sound="bell">
-              <span>🔔 Bell</span>
-              <button class="audio-preview" data-preview="bell">▶</button>
-            </div>
-            <div class="audio-option" data-sound="chime">
-              <span>🎵 Chime</span>
-              <button class="audio-preview" data-preview="chime">▶</button>
-            </div>
-            <div class="audio-option" data-sound="gong">
-              <span>🥁 Gong</span>
-              <button class="audio-preview" data-preview="gong">▶</button>
-            </div>
-            <div class="audio-option" data-sound="ping">
-              <span>🔊 Ping</span>
-              <button class="audio-preview" data-preview="ping">▶</button>
+          <div class="setting-group">
+            <label class="setting-label">
+              Long Break: <span class="setting-value" id="longBreakValue">15</span> min
+            </label>
+            <input type="range" id="longBreakDuration" class="setting-range" min="5" max="60" value="15">
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">
+              Pomodoros per Cycle: <span class="setting-value" id="cycleValue">4</span>
+            </label>
+            <input type="range" id="cycleLength" class="setting-range" min="2" max="8" value="4">
+          </div>
+
+          <!-- Auto-start -->
+          <div class="setting-group">
+            <label class="checkbox-wrapper">
+              <input type="checkbox" id="autoStart" class="checkbox">
+              <span>Auto-start next phase</span>
+            </label>
+          </div>
+
+          <!-- Theme Settings -->
+          <div class="setting-group">
+            <label class="setting-label">Theme</label>
+            <div class="theme-grid">
+              <button class="theme-option active" data-theme="ocean">Ocean</button>
+              <button class="theme-option" data-theme="forest">Forest</button>
+              <button class="theme-option" data-theme="sunset">Sunset</button>
+              <button class="theme-option" data-theme="lavender">Lavender</button>
+              <button class="theme-option" data-theme="minimal">Minimal</button>
             </div>
           </div>
-        </div>
 
-        <!-- Notifications -->
-        <div class="setting-group">
-          <label class="checkbox-wrapper">
-            <input type="checkbox" id="notifications" class="checkbox" checked>
-            <span>Enable browser notifications</span>
-          </label>
-        </div>
-      </section>
+          <!-- Mode Toggle -->
+          <div class="setting-group">
+            <label class="setting-label">Mode</label>
+            <div class="mode-toggle">
+              <button id="lightModeBtn" class="btn btn-secondary active">☀️ Light</button>
+              <button id="darkModeBtn" class="btn btn-secondary">🌙 Dark</button>
+            </div>
+          </div>
+
+          <!-- Audio Settings -->
+          <div class="setting-group">
+            <label class="setting-label">
+              Volume: <span class="setting-value" id="volumeValue">70</span>%
+            </label>
+            <input type="range" id="volume" class="setting-range" min="0" max="100" value="70">
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">Timer End Sound</label>
+            <div class="audio-options">
+              <div class="audio-option active" data-sound="bell">
+                <span>🔔 Bell</span>
+                <button class="audio-preview" data-preview="bell">▶</button>
+              </div>
+              <div class="audio-option" data-sound="chime">
+                <span>🎵 Chime</span>
+                <button class="audio-preview" data-preview="chime">▶</button>
+              </div>
+              <div class="audio-option" data-sound="gong">
+                <span>🥁 Gong</span>
+                <button class="audio-preview" data-preview="gong">▶</button>
+              </div>
+              <div class="audio-option" data-sound="ping">
+                <span>🔊 Ping</span>
+                <button class="audio-preview" data-preview="ping">▶</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="setting-group">
+            <label class="checkbox-wrapper">
+              <input type="checkbox" id="notifications" class="checkbox" checked>
+              <span>Enable browser notifications</span>
+            </label>
+          </div>
+        </section>
+      </div>
 
     </main>
 

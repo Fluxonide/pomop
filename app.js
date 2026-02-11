@@ -296,7 +296,7 @@ class PomopApp {
         this.timerDisplay.textContent = formatted;
 
         // Update circular progress
-        const circumference = 2 * Math.PI * 140; // Compute from radius to avoid drift
+        const circumference = 2 * Math.PI * 155; // Compute from radius to avoid drift
         // Clamp progress to [0, 100] and snap near-100% values so the ring fully closes
         let progress = typeof data.progress === 'number' ? data.progress : 0;
         progress = Math.max(0, Math.min(100, progress));

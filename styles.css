@@ -602,52 +602,9 @@ body {
   will-change: stroke-dashoffset;
 }
 
-/* Pulsing Glow Background - Progress-based fill (controlled by JS) */
-.timer-glow-pulse {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200px;
-  height: 200px;
-  margin-left: -100px;
-  margin-top: -100px;
-  border-radius: 50%;
-  /* Soft core light that will pulse */
-  background: radial-gradient(circle,
-      rgba(0, 255, 242, 0.85) 0%,
-      rgba(0, 255, 242, 0.15) 45%,
-      rgba(0, 255, 242, 0) 70%);
-  opacity: 0.8;
-  pointer-events: none;
-  z-index: 0;
-  animation: corePulse 3s ease-in-out infinite;
-}
 
-/* Slightly warmer core color during short breaks (subtle amber) */
-[data-phase="shortBreak"] .timer-glow-pulse {
-  background: radial-gradient(circle,
-      rgba(255, 210, 140, 0.85) 0%,
-      rgba(255, 210, 140, 0.18) 45%,
-      rgba(255, 210, 140, 0) 70%);
-}
 
-/* Core pulse animation - smoother iOS-style */
-@keyframes corePulse {
-  0% {
-    transform: scale(0.92);
-    opacity: 0.5;
-  }
 
-  50% {
-    transform: scale(1.08);
-    opacity: 0.95;
-  }
-
-  100% {
-    transform: scale(0.92);
-    opacity: 0.5;
-  }
-}
 
 /* Remove old SVG fill animation */
 .timer-circle-bg {
@@ -1376,6 +1333,44 @@ body {
   padding: 2rem 1.5rem;
   opacity: 0;
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0);
+}
+
+/* Music Player Toggle Button */
+.music-player-toggle {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: none;
+  border-radius: 12px 0 0 12px;
+  color: var(--text-main);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.music-player-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  width: 40px;
+}
+
+/* Move toggle button when panel is open */
+.music-player-panel:not(.hidden)+.music-player-toggle,
+/* Or if button is before panel in DOM */
+body:has(.music-player-panel:not(.hidden)) .music-player-toggle {
+  right: 320px;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .music-player-panel:not(.hidden) {

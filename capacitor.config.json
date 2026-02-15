@@ -1,0 +1,6 @@
+{
+    "appId": "com.skysys.pomop",
+    "appName": "pomop",
+    "webDir": "www",
+    "bundledWebRuntime": false
+}

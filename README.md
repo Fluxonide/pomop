@@ -71,7 +71,22 @@ npx serve
 # PHP
 php -S localhost:8000
 ```
+# PHP
+php -S localhost:8000
+```
 
+### Running as Desktop App (Electron)
+
+1. **Install Dependencies**
+```bash
+npm install
+```
+
+2. **Start the App**
+```bash
+npm start
+```
+This will launch Pomop as a standalone desktop application.
 ## 🌐 Deployment
 
 This is a **static web application** with zero dependencies - extremely easy to deploy!

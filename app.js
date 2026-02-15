@@ -85,6 +85,7 @@ class PomopApp {
         this.musicPlayerToggle = document.getElementById('musicPlayerToggle');
         this.musicPlayerPanel = document.querySelector('.music-player-panel');
         this.musicUpload = document.getElementById('musicUpload');
+        this.musicFolderUpload = document.getElementById('musicFolderUpload');
         this.playPauseBtn = document.getElementById('playPauseBtn');
         this.previousBtn = document.getElementById('previousBtn');
         this.nextBtn = document.getElementById('nextBtn');
@@ -434,36 +435,71 @@ class PomopApp {
             }
         });
 
-        // File upload
-        this.musicUpload.addEventListener('change', async (e) => {
+        // Music Upload Handler
+        const handleMusicUpload = async (e) => {
             const files = Array.from(e.target.files);
+
+            if (files.length === 0) return;
+
+            // Show processing message
+            const statusMsg = document.createElement('div');
+            statusMsg.style.position = 'fixed';
+            statusMsg.style.bottom = '20px';
+            statusMsg.style.right = '20px';
+            statusMsg.style.padding = '1rem';
+            statusMsg.style.background = 'rgba(0,0,0,0.8)';
+            statusMsg.style.color = '#fff';
+            statusMsg.style.borderRadius = '8px';
+            statusMsg.style.zIndex = '1000';
+            statusMsg.textContent = `Processing ${files.length} files...`;
+            document.body.appendChild(statusMsg);
+
+            let addedCount = 0;
 
             for (const file of files) {
                 // Validate file type
                 const validTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3'];
                 if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg)$/i)) {
-                    alert(`Skipping ${file.name}: Invalid audio format`);
                     continue;
                 }
 
-                // Validate file size (200MB limit)
-                const maxSize = 200 * 1024 * 1024;
-                if (file.size > maxSize) {
-                    alert(`Skipping ${file.name}: File too large (max 200MB)`);
-                    continue;
+                // Size check: Only check if NOT in Electron (no path)
+                if (!file.path) {
+                    const maxSize = 200 * 1024 * 1024;
+                    if (file.size > maxSize) {
+                        alert(`Skipping ${file.name}: File too large (max 200MB)`);
+                        continue;
+                    }
                 }
 
                 try {
                     await this.musicPlayer.addTrack(file);
+                    addedCount++;
                 } catch (error) {
                     console.error('Error adding track:', error);
-                    alert(`Failed to add ${file.name}`);
                 }
             }
 
-            this.renderPlaylist();
+            document.body.removeChild(statusMsg);
+
+            if (addedCount > 0) {
+                if (this.musicPlayer.playlist.length === addedCount) {
+                    this.musicPlayer.playTrack(0);
+                } else {
+                    alert(`Added ${addedCount} tracks to playlist!`);
+                }
+            }
+
             e.target.value = ''; // Clear input
-        });
+        };
+
+        // File upload
+        this.musicUpload.addEventListener('change', handleMusicUpload);
+
+        // Folder upload
+        if (this.musicFolderUpload) {
+            this.musicFolderUpload.addEventListener('change', handleMusicUpload);
+        }
 
         // Playback controls
         this.playPauseBtn.addEventListener('click', () => {
@@ -772,7 +808,7 @@ class PomopApp {
         });
 
         // Mode
-        this.setModeButtons(settings.mode);
+
 
         // Audio
         document.querySelectorAll('.audio-option').forEach(option => {
@@ -787,16 +823,10 @@ class PomopApp {
     setMode(mode) {
         this.settings.set('mode', mode);
         this.settings.applyTheme();
-        this.setModeButtons(mode);
+
     }
 
-    setModeButtons(mode) {
-        const lightBtn = document.getElementById('lightModeBtn');
-        const darkBtn = document.getElementById('darkModeBtn');
 
-        if (lightBtn) lightBtn.classList.toggle('active', mode === 'light');
-        if (darkBtn) darkBtn.classList.toggle('active', mode === 'dark');
-    }
 
     // ============================================
     // Task Modal
@@ -922,9 +952,15 @@ class PomopApp {
 // Initialize App on Load
 // ============================================
 
-const initApp = () => {
-    window.pomopApp = new PomopApp();
-};
+// Initialize App
+function initApp() {
+    try {
+        window.app = new PomopApp();
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        alert('App initialization failed: ' + error.message);
+    }
+}
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);

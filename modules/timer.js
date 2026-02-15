@@ -90,7 +90,12 @@ export class Timer {
     this.pause();
     this.state = 'idle';
     this.timeRemaining = this.totalTime;
-    this.emit('reset', { phase: this.phase, timeRemaining: this.timeRemaining });
+    this.emit('reset', {
+      phase: this.phase,
+      timeRemaining: this.timeRemaining,
+      totalTime: this.totalTime,
+      progress: 0
+    });
   }
 
   // Skip to next phase

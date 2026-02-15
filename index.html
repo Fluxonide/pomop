@@ -65,7 +65,7 @@
             <circle id="timerProgress" class="timer-circle-progress" cx="160" cy="160" r="155" stroke-dasharray="973.9"
               stroke-dashoffset="0" />
           </svg>
-          <div class="timer-time" id="timerDisplay">25:00</div>
+          <div class="timer-time" id="timerDisplay"></div>
         </div>
 
         <div class="controls">
@@ -83,6 +83,84 @@
           </button>
         </div>
       </section>
+
+      <!-- Music Player Toggle Button -->
+      <button id="musicPlayerToggle" class="music-player-toggle" title="Toggle Music Player">
+        ‹
+      </button>
+
+      <!-- Music Player Panel -->
+      <aside class="music-player-panel glass-card hidden">
+        <div class="music-player-header">
+          <h3 class="music-player-title">Music Player</h3>
+          <label for="musicUpload" class="btn btn-secondary btn-sm">
+            + Add Music
+          </label>
+          <input type="file" id="musicUpload" accept=".mp3,.wav,.ogg,audio/*" multiple style="display: none;">
+        </div>
+
+        <!-- Now Playing -->
+        <div class="now-playing" id="nowPlaying">
+          <div class="now-playing-info">
+            <div class="track-name" id="currentTrackName">No track playing</div>
+            <div class="track-time">
+              <span id="currentTime">0:00</span> / <span id="totalTime">0:00</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="music-progress-container">
+            <input type="range" id="musicProgress" class="music-progress" min="0" max="100" value="0">
+          </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="music-controls">
+          <button id="shuffleBtn" class="btn btn-icon music-btn" title="Shuffle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+            </svg>
+          </button>
+          <button id="previousBtn" class="btn btn-icon music-btn" title="Previous">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 20L9 12l10-8v16zM5 19V5" />
+            </svg>
+          </button>
+          <button id="playPauseBtn" class="btn btn-primary music-btn-main" title="Play">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+          <button id="nextBtn" class="btn btn-icon music-btn" title="Next">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 4l10 8-10 8V4zM19 5v14" />
+            </svg>
+          </button>
+          <button id="repeatBtn" class="btn btn-icon music-btn" title="Repeat Off" data-repeat="none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Volume Control -->
+        <div class="music-volume">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+          </svg>
+          <input type="range" id="musicVolume" class="music-volume-slider" min="0" max="100" value="70">
+          <span id="musicVolumeValue">70%</span>
+        </div>
+
+        <!-- Playlist -->
+        <div class="music-playlist-header">
+          <span>Playlist</span>
+          <button id="clearPlaylistBtn" class="btn btn-secondary btn-sm">Clear All</button>
+        </div>
+        <div class="music-playlist" id="musicPlaylist">
+          <div class="playlist-empty">No tracks in playlist</div>
+        </div>
+      </aside>
 
       <!-- Settings Overlay (sits on top of timer, no layout shift) -->
       <div id="settingsPanel" class="settings-overlay hidden">

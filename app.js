@@ -6,6 +6,7 @@ import { Timer } from './modules/timer.js';
 import { Settings } from './modules/settings.js';
 import { TaskManager } from './modules/tasks.js';
 import { AudioManager } from './modules/audio.js';
+import { MusicPlayer } from './modules/music.js';
 
 // ============================================
 // Initialize App
@@ -18,18 +19,22 @@ class PomopApp {
         this.timer = new Timer();
         this.taskManager = new TaskManager();
         this.audio = new AudioManager();
+        this.musicPlayer = new MusicPlayer();
 
         // UI Elements
         this.initializeElements();
 
         // Initialize timer with settings
-        this.timer.init(this.settings.getAll());
+        const currentSettings = this.settings.getAll();
+        console.log('Initializing timer with settings:', currentSettings);
+        this.timer.init(currentSettings);
 
         // Set up event listeners
         this.setupTimerListeners();
         this.setupUIListeners();
         this.setupSettingsListeners();
         this.setupTaskListeners();
+        this.setupMusicPlayerListeners();
 
         // Apply theme
         this.settings.applyTheme();
@@ -40,7 +45,9 @@ class PomopApp {
         // Request notification permission
         this.requestNotificationPermission();
 
-        // Update UI
+        // Update UI to show user's configured time
+        const timerState = this.timer.getState();
+        console.log('Timer state after init:', timerState);
         this.updateUI();
     }
 
@@ -73,6 +80,24 @@ class PomopApp {
         this.customTaskInput = document.getElementById('customTaskInput');
         this.addTaskBtn = document.getElementById('addTaskBtn');
         this.customTasksList = document.getElementById('customTasksList');
+
+        // Music player
+        this.musicPlayerToggle = document.getElementById('musicPlayerToggle');
+        this.musicPlayerPanel = document.querySelector('.music-player-panel');
+        this.musicUpload = document.getElementById('musicUpload');
+        this.playPauseBtn = document.getElementById('playPauseBtn');
+        this.previousBtn = document.getElementById('previousBtn');
+        this.nextBtn = document.getElementById('nextBtn');
+        this.shuffleBtn = document.getElementById('shuffleBtn');
+        this.repeatBtn = document.getElementById('repeatBtn');
+        this.musicProgress = document.getElementById('musicProgress');
+        this.musicVolume = document.getElementById('musicVolume');
+        this.musicVolumeValue = document.getElementById('musicVolumeValue');
+        this.currentTrackName = document.getElementById('currentTrackName');
+        this.currentTime = document.getElementById('currentTime');
+        this.totalTime = document.getElementById('totalTime');
+        this.musicPlaylist = document.getElementById('musicPlaylist');
+        this.clearPlaylistBtn = document.getElementById('clearPlaylistBtn');
     }
 
     // ============================================
@@ -112,7 +137,8 @@ class PomopApp {
             this.updateControlButtons();
         });
 
-        this.timer.on('reset', () => {
+        this.timer.on('reset', (data) => {
+            this.updateTimerDisplay(data);
             this.updateControlButtons();
         });
     }
@@ -391,14 +417,236 @@ class PomopApp {
     }
 
     // ============================================
+    // Music Player Listeners
+    // ============================================
+
+    setupMusicPlayerListeners() {
+        // Toggle button
+        this.musicPlayerToggle.addEventListener('click', () => {
+            this.musicPlayerPanel.classList.toggle('hidden');
+            this.musicPlayerToggle.classList.toggle('active');
+
+            // Rotate chevron icon
+            if (this.musicPlayerPanel.classList.contains('hidden')) {
+                this.musicPlayerToggle.textContent = '‹';
+            } else {
+                this.musicPlayerToggle.textContent = '›';
+            }
+        });
+
+        // File upload
+        this.musicUpload.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+
+            for (const file of files) {
+                // Validate file type
+                const validTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3'];
+                if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg)$/i)) {
+                    alert(`Skipping ${file.name}: Invalid audio format`);
+                    continue;
+                }
+
+                // Validate file size (200MB limit)
+                const maxSize = 200 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert(`Skipping ${file.name}: File too large (max 200MB)`);
+                    continue;
+                }
+
+                try {
+                    await this.musicPlayer.addTrack(file);
+                } catch (error) {
+                    console.error('Error adding track:', error);
+                    alert(`Failed to add ${file.name}`);
+                }
+            }
+
+            this.renderPlaylist();
+            e.target.value = ''; // Clear input
+        });
+
+        // Playback controls
+        this.playPauseBtn.addEventListener('click', () => {
+            this.musicPlayer.togglePlay();
+        });
+
+        this.previousBtn.addEventListener('click', () => {
+            this.musicPlayer.previous();
+        });
+
+        this.nextBtn.addEventListener('click', () => {
+            this.musicPlayer.next();
+        });
+
+        this.shuffleBtn.addEventListener('click', () => {
+            const shuffle = this.musicPlayer.toggleShuffle();
+            this.shuffleBtn.classList.toggle('active', shuffle);
+        });
+
+        this.repeatBtn.addEventListener('click', () => {
+            const repeat = this.musicPlayer.toggleRepeat();
+            this.repeatBtn.classList.toggle('active', repeat !== 'none');
+            // Update title only, SVG stays the same
+            const repeatTitles = { none: 'Repeat Off', one: 'Repeat One', all: 'Repeat All' };
+            this.repeatBtn.title = repeatTitles[repeat];
+            this.repeatBtn.dataset.repeat = repeat;
+        });
+
+        // Volume control
+        this.musicVolume.addEventListener('input', (e) => {
+            const volume = parseInt(e.target.value);
+            this.musicPlayer.setVolume(volume);
+            this.musicVolumeValue.textContent = `${volume}%`;
+        });
+
+        // Progress seeking
+        this.musicProgress.addEventListener('input', (e) => {
+            const percentage = parseInt(e.target.value);
+            this.musicPlayer.seek(percentage);
+        });
+
+        // Clear playlist
+        this.clearPlaylistBtn.addEventListener('click', () => {
+            if (confirm('Clear entire playlist?')) {
+                this.musicPlayer.clearPlaylist();
+                this.renderPlaylist();
+            }
+        });
+
+        // Music player events
+        this.musicPlayer.on('trackadded', () => {
+            this.renderPlaylist();
+        });
+
+        this.musicPlayer.on('trackremoved', () => {
+            this.renderPlaylist();
+        });
+
+        this.musicPlayer.on('trackchange', (data) => {
+            this.updateNowPlaying(data.track);
+            this.renderPlaylist();
+        });
+
+        this.musicPlayer.on('play', () => {
+            this.playPauseBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                </svg>
+            `;
+            this.playPauseBtn.title = 'Pause';
+        });
+
+        this.musicPlayer.on('pause', () => {
+            this.playPauseBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            `;
+            this.playPauseBtn.title = 'Play';
+        });
+
+        this.musicPlayer.on('stop', () => {
+            this.playPauseBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            `;
+            this.playPauseBtn.title = 'Play';
+            this.currentTrackName.textContent = 'No track playing';
+            this.currentTime.textContent = '0:00';
+            this.musicProgress.value = 0;
+        });
+
+        this.musicPlayer.on('timeupdate', (data) => {
+            this.currentTime.textContent = this.formatTime(data.currentTime);
+            this.musicProgress.value = data.progress || 0;
+        });
+
+        this.musicPlayer.on('trackloaded', (data) => {
+            this.totalTime.textContent = this.formatTime(data.duration);
+        });
+
+        this.musicPlayer.on('playlistcleared', () => {
+            this.renderPlaylist();
+            this.currentTrackName.textContent = 'No track playing';
+            this.currentTime.textContent = '0:00';
+            this.totalTime.textContent = '0:00';
+            this.musicProgress.value = 0;
+        });
+
+        // Initial render
+        this.renderPlaylist();
+    }
+
+    // Update now playing display
+    updateNowPlaying(track) {
+        if (track) {
+            this.currentTrackName.textContent = track.name;
+        }
+    }
+
+    // Render playlist
+    renderPlaylist() {
+        const playlist = this.musicPlayer.getPlaylist();
+        const currentTrack = this.musicPlayer.getCurrentTrack();
+
+        if (playlist.length === 0) {
+            this.musicPlaylist.innerHTML = '<div class="playlist-empty">No tracks in playlist</div>';
+            return;
+        }
+
+        this.musicPlaylist.innerHTML = playlist.map((track, index) => {
+            const isActive = currentTrack && currentTrack.id === track.id;
+            return `
+                <div class="playlist-item ${isActive ? 'active' : ''}" data-track-index="${index}">
+                    <div class="playlist-item-info">
+                        <div class="playlist-item-name">${track.name}</div>
+                    </div>
+                    <div class="playlist-item-actions">
+                        <button class="playlist-item-btn" data-remove-track="${track.id}">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add click listeners to playlist items
+        this.musicPlaylist.querySelectorAll('.playlist-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                const index = parseInt(item.dataset.trackIndex);
+                this.musicPlayer.playTrack(index);
+            });
+        });
+
+        // Add remove listeners
+        this.musicPlaylist.querySelectorAll('[data-remove-track]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const trackId = parseFloat(btn.dataset.removeTrack);
+                this.musicPlayer.removeTrack(trackId);
+            });
+        });
+    }
+
+    // Format time helper
+    formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // ============================================
     // UI Updates
     // ============================================
 
     updateTimerDisplay(data) {
+        console.log('updateTimerDisplay called with data:', data);
         const minutes = Math.floor(data.timeRemaining / 60);
         const seconds = data.timeRemaining % 60;
         const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
+        console.log('Setting timer display to:', formatted);
         this.timerDisplay.textContent = formatted;
 
         // Update circular progress
@@ -511,9 +759,12 @@ class PomopApp {
         document.getElementById('volume').value = settings.volume;
         document.getElementById('volumeValue').textContent = settings.volume;
 
-        // Checkboxes
-        document.getElementById('autoStart').checked = settings.autoStart;
-        document.getElementById('notifications').checked = settings.notifications;
+        // Checkboxes (with null checks)
+        const autoStartEl = document.getElementById('autoStart');
+        if (autoStartEl) autoStartEl.checked = settings.autoStart;
+
+        const notificationsEl = document.getElementById('notifications');
+        if (notificationsEl) notificationsEl.checked = settings.notifications;
 
         // Theme
         document.querySelectorAll('.theme-option').forEach(btn => {
@@ -540,8 +791,11 @@ class PomopApp {
     }
 
     setModeButtons(mode) {
-        document.getElementById('lightModeBtn').classList.toggle('active', mode === 'light');
-        document.getElementById('darkModeBtn').classList.toggle('active', mode === 'dark');
+        const lightBtn = document.getElementById('lightModeBtn');
+        const darkBtn = document.getElementById('darkModeBtn');
+
+        if (lightBtn) lightBtn.classList.toggle('active', mode === 'light');
+        if (darkBtn) darkBtn.classList.toggle('active', mode === 'dark');
     }
 
     // ============================================

@@ -10,7 +10,6 @@
   },
   "build": {
     "appId": "com.skylsys.pomop",
-    "publish": "never",
     "linux": {
       "target": [
         "deb",

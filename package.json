@@ -10,13 +10,13 @@
   },
   "build": {
     "appId": "com.skylsys.pomop",
+    "publish": "never",
     "linux": {
       "target": [
         "deb",
         "AppImage"
       ],
-      "category": "Utility",
-      "publish": "never"
+      "category": "Utility"
     }
   },
   "author": "Skysys <skysys@example.com>",
